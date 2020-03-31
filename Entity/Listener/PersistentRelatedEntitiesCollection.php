@@ -9,9 +9,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Expr\ClosureExpressionVisitor;
 use Doctrine\Common\Collections\Selectable;
+use Doctrine\Common\Persistence\ManagerRegistry;
 use JMS\JobQueueBundle\Entity\Job;
-use Symfony\Bridge\Doctrine\RegistryInterface;
-use Symfony\Component\Validator\Constraints\Collection as Collection2;
 
 /**
  * Collection for persistent related entities.
@@ -26,7 +25,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     private $job;
     private $entities;
 
-    public function __construct(RegistryInterface $registry, Job $job)
+    public function __construct(ManagerRegistry $registry, Job $job)
     {
         $this->registry = $registry;
         $this->job = $job;
@@ -346,7 +345,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return !$this->entities;
+        return ! $this->entities;
     }
 
     /**
@@ -366,7 +365,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
      * a new collection with the elements returned by the function.
      *
      * @param Closure $func
-     * @return Collection2
+     * @return Collection
      */
     public function map(Closure $func)
     {
@@ -380,7 +379,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
      * The order of the elements is preserved.
      *
      * @param Closure $p The predicate used for filtering.
-     * @return Collection2 A collection with the results of the filter operation.
+     * @return Collection A collection with the results of the filter operation.
      */
     public function filter(Closure $p)
     {
@@ -401,7 +400,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
         $this->initialize();
 
         foreach ($this->entities as $key => $element) {
-            if (!$p($key, $element)) {
+            if ( ! $p($key, $element)) {
                 return false;
             }
         }
@@ -474,18 +473,18 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
      * return a new collection containing these elements.
      *
      * @param  Criteria $criteria
-     * @return Collection2
+     * @return Collection
      */
     public function matching(Criteria $criteria)
     {
         $this->initialize();
 
-        $expr = $criteria->getWhereExpression();
+        $expr     = $criteria->getWhereExpression();
         $filtered = $this->entities;
 
         if ($expr) {
-            $visitor = new ClosureExpressionVisitor();
-            $filter = $visitor->dispatch($expr);
+            $visitor  = new ClosureExpressionVisitor();
+            $filter   = $visitor->dispatch($expr);
             $filtered = array_filter($filtered, $filter);
         }
 
@@ -536,16 +535,16 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
         foreach ($entitiesPerClass as $className => $ids) {
             $em = $this->registry->getManagerForClass($className);
             $qb = $em->createQueryBuilder()
-                ->select('e')->from($className, 'e');
+                        ->select('e')->from($className, 'e');
 
             $i = 0;
             foreach ($ids as $id) {
                 $expr = null;
                 foreach ($id as $k => $v) {
                     if (null === $expr) {
-                        $expr = $qb->expr()->eq('e.' . $k, '?' . (++$i));
+                        $expr = $qb->expr()->eq('e.'.$k, '?'.(++$i));
                     } else {
-                        $expr = $qb->expr()->andX($expr, $qb->expr()->eq('e.' . $k, '?' . (++$i)));
+                        $expr = $qb->expr()->andX($expr, $qb->expr()->eq('e.'.$k, '?'.(++$i)));
                     }
 
                     $qb->setParameter($i, $v);
