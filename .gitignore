@@ -1,3 +1,7 @@
 phpunit.xml
 vendor/
+.DS_Store
+web/.DS_Store
+.idea/
+.idea/*
 
